@@ -1,26 +1,18 @@
-FROM python:3.7.4-alpine3.10
+ARG GOVERSION=1.20
+ARG GOARCH
+FROM golang:${GOVERSION} as builder
+ARG GOARCH
+ENV GOARCH=${GOARCH}
+WORKDIR /go/src/k8s.io/kube-state-metrics/
+COPY . /go/src/k8s.io/kube-state-metrics/
 
-ADD django-polls/requirements.txt /app/requirements.txt
+RUN make build-local
 
-RUN set -ex \
-    && apk add --no-cache --virtual .build-deps postgresql-dev build-base \
-    && python -m venv /env \
-    && /env/bin/pip install --upgrade pip \
-    && /env/bin/pip install --no-cache-dir -r /app/requirements.txt \
-    && runDeps="$(scanelf --needed --nobanner --recursive /env \
-        | awk '{ gsub(/,/, "\nso:", $2); print "so:" $2 }' \
-        | sort -u \
-        | xargs -r apk info --installed \
-        | sort -u)" \
-    && apk add --virtual rundeps $runDeps \
-    && apk del .build-deps
+FROM gcr.io/distroless/static:latest-${GOARCH}
+COPY --from=builder /go/src/k8s.io/kube-state-metrics/kube-state-metrics /
 
-ADD django-polls /app
-WORKDIR /app
+USER nobody
 
-ENV VIRTUAL_ENV /env
-ENV PATH /env/bin:$PATH
+ENTRYPOINT ["/kube-state-metrics", "--port=8080", "--telemetry-port=8081"]
 
-EXPOSE 8000
-
-CMD ["gunicorn", "--bind", ":8000", "--workers", "3", "mysite.wsgi"]
+EXPOSE 8080 8081

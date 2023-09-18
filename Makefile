@@ -1,69 +1,166 @@
-start: ## Start the docker containers
-	@echo "Starting the docker containers"
-	@docker-compose up
-	@echo "Containers started - http://localhost:8000"
+FLAGS =
+TESTENVVAR =
+REGISTRY ?= gcr.io/k8s-staging-kube-state-metrics
+TAG_PREFIX = v
+VERSION = $(shell cat VERSION)
+TAG ?= $(TAG_PREFIX)$(VERSION)
+LATEST_RELEASE_BRANCH := release-$(shell grep -ohE "[0-9]+.[0-9]+" VERSION)
+BRANCH = $(strip $(shell git rev-parse --abbrev-ref HEAD))
+DOCKER_CLI ?= docker
+PROMTOOL_CLI ?= promtool
+PKGS = $(shell go list ./... | grep -v /vendor/ | grep -v /tests/e2e)
+ARCH ?= $(shell go env GOARCH)
+BUILD_DATE = $(shell date -u +'%Y-%m-%dT%H:%M:%SZ')
+GIT_COMMIT ?= $(shell git rev-parse --short HEAD)
+OS ?= $(shell uname -s | tr A-Z a-z)
+ALL_ARCH = amd64 arm arm64 ppc64le s390x
+PKG = github.com/prometheus/common
+PROMETHEUS_VERSION = 2.45.0
+GO_VERSION = 1.20.6
+IMAGE = $(REGISTRY)/kube-state-metrics
+MULTI_ARCH_IMG = $(IMAGE)-$(ARCH)
+USER ?= $(shell id -u -n)
+HOST ?= $(shell hostname)
 
-stop: ## Stop Containers
-	@docker-compose down
+export DOCKER_CLI_EXPERIMENTAL=enabled
 
-restart: stop start ## Restart Containers
+validate-modules:
+	@echo "- Verifying that the dependencies have expected content..."
+	go mod verify
+	@echo "- Checking for any unused/missing packages in go.mod..."
+	go mod tidy
+	@git diff --exit-code -- go.sum go.mod
 
-start-bg:  ## Run containers in the background
-	@docker-compose up -d
+licensecheck:
+	@echo ">> checking license header"
+	@licRes=$$(for file in $$(find . -type f -iname '*.go' ! -path './vendor/*') ; do \
+               awk 'NR<=5' $$file | grep -Eq "(Copyright|generated|GENERATED)" || echo $$file; \
+       done); \
+       if [ -n "$${licRes}" ]; then \
+               echo "license header checking failed:"; echo "$${licRes}"; \
+               exit 1; \
+       fi
 
-build: ## Build Containers
-	@docker-compose build
+lint: shellcheck licensecheck
+	golangci-lint run
 
-ssh: ## SSH into running web container
-	docker-compose exec web bash
+lint-fix:
+	golangci-lint run --fix -v
 
-migrations: ## Create DB migrations in the container
-	@docker-compose exec web python manage.py makemigrations
+doccheck: generate
+	@echo "- Checking if the generated documentation is up to date..."
+	@git diff --exit-code
+	@echo "- Checking if the documentation is in sync with the code..."
+	@grep -hoE -d skip '\| kube_[^ |]+' docs/* --exclude=README.md | sed -E 's/\| //g' | sort -u > documented_metrics
+	@find internal/store -type f -not -name '*_test.go' -exec sed -nE 's/.*"(kube_[^"]+)".*/\1/p' {} \; | sort -u > code_metrics
+	@diff -u0 code_metrics documented_metrics || (echo "ERROR: Metrics with - are present in code but missing in documentation, metrics with + are documented but not found in code."; exit 1)
+	@echo OK
+	@rm -f code_metrics documented_metrics
+	@echo "- Checking for orphan documentation files"
+	@cd docs; for doc in *.md; do if [ "$$doc" != "README.md" ] && ! grep -q "$$doc" *.md; then echo "ERROR: No link to documentation file $${doc} detected"; exit 1; fi; done
+	@echo OK
 
-migrate: ## Run DB migrations in the container
-	@docker-compose exec web python manage.py migrate
+build-local:
+	GOOS=$(OS) GOARCH=$(ARCH) CGO_ENABLED=0 go build -ldflags "-s -w -X ${PKG}/version.Version=${TAG} -X ${PKG}/version.Revision=${GIT_COMMIT} -X ${PKG}/version.Branch=${BRANCH} -X ${PKG}/version.BuildUser=${USER}@${HOST} -X ${PKG}/version.BuildDate=${BUILD_DATE}" -o kube-state-metrics
 
-translations:
-	@docker-compose exec web python manage.py makemessages --all --ignore node_modules --ignore venv
-	@docker-compose exec web python manage.py makemessages -d djangojs --all --ignore node_modules --ignore venv
-	@docker-compose exec web python manage.py compilemessages
+build: kube-state-metrics
 
-shell: ## Get a Django shell
-	@docker-compose exec web python manage.py shell
+kube-state-metrics:
+	# Need to update git setting to prevent failing builds due to https://github.com/docker-library/golang/issues/452
+	${DOCKER_CLI} run --rm -v "${PWD}:/go/src/k8s.io/kube-state-metrics" -w /go/src/k8s.io/kube-state-metrics -e GOOS=$(OS) -e GOARCH=$(ARCH) golang:${GO_VERSION} git config --global --add safe.directory "*" && make build-local
 
-dbshell: ## Get a Database shell
-	@docker-compose exec db psql -U postgres qualifeed_app
+test-unit:
+	GOOS=$(shell uname -s | tr A-Z a-z) GOARCH=$(ARCH) $(TESTENVVAR) go test --race $(FLAGS) $(PKGS)
 
-test: ## Run Django tests
-	@docker-compose exec web python manage.py test
+test-rules:
+	${PROMTOOL_CLI} test rules tests/rules/alerts-test.yaml
 
-init: start-bg migrations migrate bootstrap_content  ## Quickly get up and running (start containers and migrate DB)
+shellcheck:
+	${DOCKER_CLI} run -v "${PWD}:/mnt" koalaman/shellcheck:stable $(shell find . -type f -name "*.sh" -not -path "*vendor*")
 
-pip-compile: ## Compiles your requirements.in file to requirements.txt
-	@docker-compose exec web pip-compile requirements/requirements.in
-	@docker-compose exec web pip-compile requirements/prod-requirements.in
+# Runs benchmark tests on the current git ref and the last release and compares
+# the two.
+test-benchmark-compare:
+	@git fetch
+	./tests/compare_benchmarks.sh main
+	./tests/compare_benchmarks.sh ${LATEST_RELEASE_BRANCH}
 
-requirements: pip-compile build restart  ## Rebuild your requirements and restart your containers
+all: all-container
 
-npm-install: ## Runs npm install in the container
-	@docker-compose exec web npm install
+# Container build for multiple architectures as defined in ALL_ARCH
 
-npm-build: ## Runs npm build in the container (for production assets)
-	@docker-compose exec web npm run build
+container: container-$(ARCH)
 
-npm-watch: ## Runs npm watch in the container (recommended for dev)
-	@docker-compose exec web npm run dev-watch
+container-%:
+	${DOCKER_CLI} build --pull -t $(IMAGE)-$*:$(TAG) --build-arg GOVERSION=$(GO_VERSION) --build-arg GOARCH=$* .
 
-npm-type-check: ## Runs the type checker on the front end TypeScript code
-	@docker-compose exec web npm run type-check
+sub-container-%:
+	$(MAKE) --no-print-directory ARCH=$* container
 
-bootstrap_content:  ## Initializes your Wagtail content with some example pages and blog posts
-	@docker-compose exec web python manage.py bootstrap_content
+all-container: $(addprefix sub-container-,$(ALL_ARCH))
 
-upgrade: build start-bg migrations migrate
+# Container push, push is the target to push for multiple architectures as defined in ALL_ARCH
 
-.PHONY: help
-.DEFAULT_GOAL := help
+push: $(addprefix sub-push-,$(ALL_ARCH)) push-multi-arch;
 
-help:
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+sub-push-%: container-% do-push-% ;
+
+do-push-%:
+	${DOCKER_CLI} push $(IMAGE)-$*:$(TAG)
+
+push-multi-arch:
+	${DOCKER_CLI} manifest create --amend $(IMAGE):$(TAG) $(shell echo $(ALL_ARCH) | sed -e "s~[^ ]*~$(IMAGE)\-&:$(TAG)~g")
+	@for arch in $(ALL_ARCH); do ${DOCKER_CLI} manifest annotate --arch $${arch} $(IMAGE):$(TAG) $(IMAGE)-$${arch}:$(TAG); done
+	${DOCKER_CLI} manifest push --purge $(IMAGE):$(TAG)
+
+clean:
+	rm -f kube-state-metrics
+	git clean -Xfd .
+
+e2e:
+	./tests/e2e.sh
+
+generate: build-local
+	@echo ">> generating docs"
+	@./scripts/generate-help-text.sh
+	embedmd -w `find . -path ./vendor -prune -o -name "*.md" -print`
+
+validate-manifests: examples
+	@git diff --exit-code
+
+mixin: examples/prometheus-alerting-rules/alerts.yaml
+
+examples/prometheus-alerting-rules/alerts.yaml: jsonnet $(shell find jsonnet | grep ".libsonnet") scripts/mixin.jsonnet scripts/vendor
+	mkdir -p examples/prometheus-alerting-rules
+	jsonnet -J scripts/vendor scripts/mixin.jsonnet | gojsontoyaml > examples/prometheus-alerting-rules/alerts.yaml
+
+examples: examples/standard examples/autosharding examples/daemonsetsharding mixin
+
+examples/standard: jsonnet $(shell find jsonnet | grep ".libsonnet") scripts/standard.jsonnet scripts/vendor VERSION
+	mkdir -p examples/standard
+	jsonnet -J scripts/vendor -m examples/standard --ext-str version="$(VERSION)" scripts/standard.jsonnet | xargs -I{} sh -c 'cat {} | gojsontoyaml > `echo {} | sed "s/\(.\)\([A-Z]\)/\1-\2/g" | tr "[:upper:]" "[:lower:]"`.yaml' -- {}
+	find examples -type f ! -name '*.yaml' -delete
+
+examples/autosharding: jsonnet $(shell find jsonnet | grep ".libsonnet") scripts/autosharding.jsonnet scripts/vendor VERSION
+	mkdir -p examples/autosharding
+	jsonnet -J scripts/vendor -m examples/autosharding --ext-str version="$(VERSION)" scripts/autosharding.jsonnet | xargs -I{} sh -c 'cat {} | gojsontoyaml > `echo {} | sed "s/\(.\)\([A-Z]\)/\1-\2/g" | tr "[:upper:]" "[:lower:]"`.yaml' -- {}
+	find examples -type f ! -name '*.yaml' -delete
+
+examples/daemonsetsharding: jsonnet $(shell find jsonnet | grep ".libsonnet") scripts/daemonsetsharding.jsonnet scripts/vendor VERSION
+	mkdir -p examples/daemonsetsharding
+	jsonnet -J scripts/vendor -m examples/daemonsetsharding --ext-str version="$(VERSION)" scripts/daemonsetsharding.jsonnet | xargs -I{} sh -c 'cat {} | gojsontoyaml > `echo {} | sed "s/\(.\)\([A-Z]\)/\1-\2/g" | tr "[:upper:]" "[:lower:]"`.yaml' -- {}
+	find examples -type f ! -name '*.yaml' -delete
+
+scripts/vendor: scripts/jsonnetfile.json scripts/jsonnetfile.lock.json
+	cd scripts && jb install
+
+install-tools:
+	@echo Installing tools from tools.go
+	grep '^\s*_' tools/tools.go | awk '{print $$2}' | xargs -tI % go install -mod=readonly -modfile=tools/go.mod %
+
+install-promtool:
+	@echo Installing promtool
+	@wget -qO- "https://github.com/prometheus/prometheus/releases/download/v${PROMETHEUS_VERSION}/prometheus-${PROMETHEUS_VERSION}.${OS}-${ARCH}.tar.gz" |\
+	tar xvz --strip-components=1 prometheus-${PROMETHEUS_VERSION}.${OS}-${ARCH}/promtool
+
+.PHONY: all build build-local all-push all-container container container-* do-push-* sub-push-* push push-multi-arch test-unit test-rules test-benchmark-compare clean e2e validate-modules shellcheck licensecheck lint lint-fix generate embedmd
