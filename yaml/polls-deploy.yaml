@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: polls-app
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+
+
+
+  selector:
+    matchLabels:
+      app: polls
+  template:
+    metadata:
+      labels:
+        app: polls
+    spec:
+      securityContext:
+        runAsUser: 1001
+
+        runAsGroup: 1001
+        fsGroup: 1001
+       #readOnlyRootFilesystem: true
+        runAsNonRoot: true
+      terminationGracePeriodSeconds: 30
+
+
+
+      containers:
+        - name: polls
+          image: ichrakdoc/qualifeed_stage:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 50052
+            - containerPort: 3001
+          envFrom:
+          - secretRef:
+              name: secret
+          - configMapRef:
+              name: polls-config
+          livenessProbe:
+            httpGet:
+              port: 3001
+              path: /health
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              port: 3001
+              path: /health
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 15
+            successThreshold: 1
+            failureThreshold: 3
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 500m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["all"]
+
+

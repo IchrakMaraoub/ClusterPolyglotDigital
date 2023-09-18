@@ -1,0 +1,16 @@
+- hosts: all
+  become: true
+  tasks:
+    - name: create the 'ichrak' user
+      user: name=ichrak append=yes state=present createhome=yes shell=/bin/bash
+
+    - name: allow 'ichrak' to have passwordless sudo
+      lineinfile:
+        dest: /etc/sudoers
+        line: 'ichrak ALL=(ALL) NOPASSWD: ALL'
+        validate: 'visudo -cf %s'
+
+   # - name: set up authorized keys for the ubuntu user
+   #   authorized_key: user=ichrak key="{{ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCpUyGT42PM0Y0t/VqkXol/0s77eJLaaKlOoLA/sNva8DTtt3NMVJMpaHBb3dw76SyBlOHFFqfLsWbpURsq7z7zNxby/vhCUMGIxkf3OpfNgglY6+rcsIQGZMdCAAoFMTxVbVpRW1a9S53bJDTJ/411pyMJ3rR+I/kmQZYXfbvOF6oaJYLHbQMCCC7qG9zehP/xEANl3lGqqf9Ro1iF7Wjj+LYSoHlDOU72oufCneeHfMDQmG+liMxkczWuF+zEnrM6givBeI2ubm4hKqZoSR4tE1dRMvHQ3Z+e9c5IYLbINlmf9oou+pzvL44biOSD4snLyHDGMcOq6tQTBXY6DiVgnD8/ilB+ufHWUms98gR/GXnqftw+Pva8AqFmbfZTnuR7BMnuzKiAX0AdxTYf0SuRgpdsUQ4eWpiBNcmKNZJ5312lVsuuy3U3B2NfUOzuwGaaWA8iwdRPOJTq00DsZ+I7HjcgYf72Io6uX2JqX6wCE6/QOqgG/nf/XxUCUcjNMSk= ichrak@DESKTOP-9GU1560}}" 
+   #  with_file:
+   #    - ~/.ssh/id_rsa.pub

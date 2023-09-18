@@ -1,0 +1,13 @@
+-------------------------------------------------------------------------------->8
+-------------------------------------------------------------------------------->8
+[2023-08-03T09:59:50.422679819Z][docker-desktop-user-distro][I] syncContextStores <HOME>/.docker/contexts <-> /mnt/c/Users/ichra/.docker/contexts
+[2023-08-03T09:59:50.450550305Z][docker-desktop-user-distro][I] syncContextStores <HOME>/.docker/contexts <-> /mnt/c/Users/ichra/.docker/contexts os.Symlink <HOME>/.docker/contexts -> /mnt/c/Users/ichra/.docker/contexts
+-------------------------------------------------------------------------------->8
+-------------------------------------------------------------------------------->8
+[2023-08-03T09:59:51.520727196Z][docker-desktop-user-distro][I] linkPathToWindows windowsPath = /mnt/c/Users/ichra/.aws, linkPath = <HOME>/.aws
+-------------------------------------------------------------------------------->8
+-------------------------------------------------------------------------------->8
+[2023-08-03T09:59:52.881930876Z][docker-desktop-user-distro][I] linkPathToWindows windowsPath = /mnt/c/Users/ichra/.azure, linkPath = <HOME>/.azure
+-------------------------------------------------------------------------------->8
+-------------------------------------------------------------------------------->8
+[2023-08-03T09:59:53.752924881Z][docker-desktop-user-distro][I] linkPathToWindows windowsPath = /mnt/c/Users/ichra/.docker/features.json, linkPath = ~/.docker/features.json
