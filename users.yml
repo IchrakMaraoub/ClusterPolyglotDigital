@@ -1,0 +1,17 @@
+- hosts: 'workers, masters'
+  become: yes
+
+  tasks:
+    - name: create the ichrak user account
+      user: name=ichrak append=yes state=present createhome=yes shell=/bin/bash
+
+    - name: allow 'ichrak' to use sudo without needing a password
+      lineinfile:
+        dest: /etc/sudoers
+        line: 'kube ALL=(ALL) NOPASSWD: ALL'
+        validate: 'visudo -cf %s'
+
+    - name: set up authorized keys for the ichrak user
+      authorized_key: user=ichrak key="{{item}}"
+      with_file:
+        - ~/.ssh/id_rsa.pub
