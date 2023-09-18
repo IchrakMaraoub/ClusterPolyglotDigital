@@ -1,0 +1,207 @@
+{% extends "web/app/app_base.html" %}
+{% load static %}
+{% block app %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bootstrap CRUD Data Table for Database with Modal Form</title>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto|Varela+Round">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+
+
+<script src="https://cdn.datatables.net/1.13.1/js/jquery.dataTables.min.js"></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.1/css/jquery.dataTables.min.css">
+
+<section class="app-card">
+    <h1 class="pg-title"> Setting Brand </h1>
+</section>
+<section class="app-card">
+                <div class="table-wrapper">
+                    <div class="row">
+                        <div class="mx-3">
+                           <div class="table-title"  class="btn btn-primary btn-block btn-sm"  style="float: right; font-size:16px;">
+                                <a  href="#addBrandModal" class="btn btn-primary btn-block btn-sm"  data-bs-toggle="modal" style="font-size : 12px;"><i class="material-icons">&#xE147;</i> <span>Add New Brand</span></a>
+                            </div>
+                        </div>
+                    </div>
+    <section style="padding: 10 px;">
+        <div class="table-responsive">  
+                <table class="table table-striped" id="table_serach">
+                    <thead>
+                        <tr>
+                            <th>Brand ID</th> 
+                            <th>Brand Name</th> 
+                           
+                            <th>Creation Date</th>    
+                            <th>Edit</th>
+
+                        </tr>
+                    </thead>
+                    <tbody>		
+                        {% for item in brands %}
+                            <tr>
+                                <td>{{ item.id}} </td>
+                               
+                                <td>{{ item.brand_name}} </td>
+                                
+                                <td>{{item.created_at}}</td>
+                                <td>
+                                    <a href="#editBrandModal" class="edit" data-id="{{ item.id }}" data-bs-toggle="modal" style="float: right;" ><i class="material-icons" data-bs-toggle="tooltip" title="Edit">&#xE254;</i></a>
+                                </td>
+                            </tr> 
+                        {% endfor %}
+
+                    </tbody>
+                </table>  
+        </div>
+    </section>
+        <!-- ADD Modal HTML -->
+    <div id="addBrandModal" class="modal fade">
+         <div class="modal-dialog">
+                <div class="modal-content">
+                    <form method="POST" hx-post="{% url 'qualifeed:brand' request.team.slug %}" hx-encoding="multipart/form-data"
+                            hx-target="this" hx-swap="outerHTML">                        
+                            <div class="modal-header">		
+                                {% csrf_token %}				
+                                <h4 class="modal-title">Add Brand</h4>
+                                <button type="button" class="close" data-bs-dismiss="modal" aria-hidden="true" style="float: right;">&times;</button>
+                </div>
+                <div class="modal-body">					
+                    <div class="form-group">
+                        <p><label for="id_brand_name" name="brand_name" >Brand Name:</label> {{ brand_form.brand_name }}</p>
+                       
+                          
+
+
+                        <div class="form-group">
+                            <input type="submit" class="btn btn-primary btn-block btn-sm" value="save">
+                    </div>
+                </div>
+            </form>
+            </div>
+         </div>
+     </div>
+       
+       <!-- Edit Modal HTML -->
+       <div id="editBrandModal" class="modal fade" >
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="formEdit" method="POST" hx-post="{% url 'qualifeed:brand' request.team.slug %}" hx-encoding="multipart/form-data" hx-target="this" hx-swap="outerHTML" >
+                    <div class="modal-header">			
+                        {% csrf_token %}				
+                        <h4 class="modal-title">Edit Brand</h4>
+                        <button type="button" class="close" data-bs-dismiss="modal" aria-hidden="true" style="float: right;">&times;</button>
+                    </div>
+                    <div class="modal-body">					
+                        <div class="form-group">
+                            <label>Id</label>
+                            <input type="text" class="form-control" id="edit-id" name="id" required readonly>
+                            
+                            <label>Brand name</label>
+                            <input type="text" class="form-control" id="edit-name" name="name">
+
+                          
+                                <small class="text-red text-muted mySpan"></small>
+                            </div>
+                        </div>					
+                    <div class="modal-footer">
+                        <input type="button" class="btn btn-default" data-bs-dismiss="modal" value="Cancel">
+                        <input type="submit"  type="submit" class="btn btn-primary btn-block btn-sm" value="save">
+                    </div>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+</section>
+<script>
+    $(document).ready(function () {
+        $('#table_serach').DataTable();
+        
+    });
+</script>
+
+{% block scripts %}
+
+
+
+ <script>
+         // Attach click event listener to "edit-btn" class
+         $('.edit').on('click', function() {
+           // Get the brand Name from the data attribute
+           var brandId = $(this).data('id');
+          
+             console.log(brandId);
+             
+            
+           // Make an AJAX request to fetch the brands data
+             $.ajax({
+                 url: '{% url 'qualifeed:brand' request.team.slug %}' ,
+                 method: 'GET',
+                 data : {
+                     'brand_id' : brandId ,
+
+                 },
+                 success: function(data) {
+                   // Update the form fields with the brand data
+                   console.log(data.values.brand_id);
+                   console.log(data.values.brand_name);
+    
+                 
+                   $('#edit-id').val(brandId);
+                 
+                  $('#edit-name').val(data.values.brand_name);
+                 
+            
+                  // Show the form  
+                  $("#editBrandModal").prependTo("body");
+                  $('#editBrandModal').modal('show');
+ 
+                 }
+             });
+           
+         })
+ </script>
+ <script>
+    $("#formEdit select[name='brand_name']").on('change', function(){
+     var $this = $(this);
+     console.log($this.val());
+     if($this.val() !=''){
+         $("#formEdit select[name='brand_name']").find('.after').nextAll().remove();
+         $.ajax({
+             url: '{% url 'qualifeed:brand' request.team.slug %}' ,
+             type: 'GET',
+             data : {
+                 'brand_name' : $this.val() ,
+               },
+
+
+
+             success: function(resp){
+                 let options = '';
+                 resp.data.forEach(brand_name => {
+                     options+='<option value='+brand_name +'>'+brand_name +'</option>';
+                 });
+                 $("#formEdit select[name='brand_name']").find('.after').after(options);
+             }, 
+             error: function(resp){
+                 console.log('Something went wrong');
+             }
+         });
+ 
+     }else{
+         $("#formAdd select[name='brand_name']").find('.after').nextAll().remove();
+     }
+    });
+ 
+ </script>
+ 
+ 
+ {% endblock scripts %}
+ {% endblock %}
+ 

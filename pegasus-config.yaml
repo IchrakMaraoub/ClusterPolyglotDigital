@@ -1,0 +1,27 @@
+default_context:
+  _pegasus_version: '2022.12'
+  author_name: Polyglot Digital
+  ci: github_actions
+  css_framework: bootstrap
+  css_theme: bootstrap-material
+  database: postgres
+  deploy_platform: digital_ocean_app_platform
+  description: Quality control application
+  domain_name: qualifeed.io
+  email: contact@polyglot-digital.com
+  enable_google_login: y
+  enable_twitter_login: y
+  front_end_framework: react
+  project_name: Qualifeed
+  project_slug: qualifeed_app
+  stripe_payment_mode: checkout
+  subscription_billing_model: per_unit
+  use_2fa: y
+  use_api_keys: y
+  use_docker: y
+  use_impersonation: y
+  use_sentry: y
+  use_subscriptions: y
+  use_teams: y
+  use_translations: y
+  use_wagtail: y

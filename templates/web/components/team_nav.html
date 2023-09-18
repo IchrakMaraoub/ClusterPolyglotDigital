@@ -1,0 +1,197 @@
+{% load i18n %}
+{% load team_tags %}
+{% if request.team %}
+
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<style>
+ 
+
+/* Style the sidenav links and the dropdown button */
+ .dropdown-btn {
+  padding: 6px 8px 6px 28px;
+  text-decoration: none;
+  font-size: 12px;
+  color: white;
+  display: block;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  outline: none;
+}
+
+/* On mouse-over */
+.sidenav a:hover, .dropdown-btn:hover {
+  color: #818181;
+}
+
+/* Main content */
+.main {
+  margin-left: 200px; /* Same as the width of the sidenav */
+  font-size: 20px; /* Increased text to enable scrolling */
+  padding: 0px 10px;
+}
+
+/* Add an active class to the active dropdown button */
+.active {
+  background-color: #818181;
+  color: white;
+ 
+}
+
+/* Dropdown container (hidden by default). Optional: add a lighter background color and some left padding to change the design of the dropdown content */
+.dropdown-container {
+  display: none;
+  background-color: #262626;
+  padding-left: 8px;
+}
+
+/* Optional: Style the caret down icon */
+.fa-caret-down {
+  float: right;
+  padding-right: 8px;
+}
+
+/* Some media queries for responsiveness */
+@media screen and (max-height: 450px) {
+  .sidenav {padding-top: 15px;}
+  .sidenav a {font-size: 18px;}
+}
+</style>
+</head>
+<body>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+
+
+  {% if request.user|is_admin_of:request.team %}
+
+  <li class="nav-item">
+    <a href="{% url 'qualifeed:logs' request.team.slug %}" class="nav-link {% if active_tab == 'manage-team' %}active{% endif %}">
+      <span class="pg-icon"><i class="fa fa-gear"></i></span><span class="is-hidden-tablet-only">{% translate "Control Logs" %}</span>
+    </a>
+  </li>
+
+  <li class="nav-item">
+    <a href="{% url 'qualifeed:reparation' request.team.slug %}" class="nav-link {% if active_tab == 'manage-team' %}active{% endif %}">
+      <span class="pg-icon"><i class="fa fa-gear"></i></span><span class="is-hidden-tablet-only">{% translate "Reparation Logs" %}</span>
+    </a>
+  </li>
+
+  <li class="nav-item">
+    <a href="{% url 'qualifeed:photo' request.team.slug %}" class="nav-link {% if active_tab == 'manage-team' %}active{% endif %}">
+      <span class="pg-icon"><i class="fa fa-gear"></i></span><span class="is-hidden-tablet-only">{% translate "Photos" %}</span>
+    </a>
+  </li>
+
+<div class="sidenav">
+    
+  <button class="dropdown-btn">
+  <span class="pg-icon"><i class="fa fa-gear"></i></span>    
+Product Management 
+  <i class="fa fa-caret-down"></i>
+   
+  </button>
+<div class="dropdown-container">
+  <a href="{% url 'qualifeed:category' request.team.slug %}" class="nav-link {% if active_tab == 'qualifeed' %}active{% endif %}">
+    <span class="pg-icon"><i class="fa-brands fa-qualifeed"></i></span><span class="is-hidden-tablet-only">{% translate "Category" %}</span>
+    </a>
+    <a href="{% url 'qualifeed:brand' request.team.slug %}" class="nav-link {% if active_tab == 'qualifeed' %}active{% endif %}">
+    <span class="pg-icon"><i class="fa-brands fa-qualifeed"></i></span><span class="is-hidden-tablet-only">{% translate "Brand" %}</span>
+    </a>
+   <!--
+
+    <a href="{% url 'qualifeed:caracter' request.team.slug %}" class="nav-link {% if active_tab == 'qualifeed' %}active{% endif %}">
+    <span class="pg-icon"><i class="fa-brands fa-qualifeed"></i></span><span class="is-hidden-tablet-only">{% translate "Tags" %}</span>
+    </a>  -->
+    <a href="{% url 'qualifeed:box' request.team.slug %}" class="nav-link {% if active_tab == 'qualifeed' %}active{% endif %}">
+    <span class="pg-icon"><i class="fa-brands fa-qualifeed"></i></span><span class="is-hidden-tablet-only">{% translate "Box" %}</span>
+    </a>
+   <!--<a href="{% url 'qualifeed:reference' request.team.slug %}" class="nav-link {% if active_tab == 'qualifeed' %}active{% endif %}">
+      <span class="pg-icon"><i class="fa-brands fa-qualifeed"></i></span><span class="is-hidden-tablet-only">{% translate "Reference" %}</span>
+      </a>  -->
+    <a href="{% url 'qualifeed:product' request.team.slug %}" class="nav-link {% if active_tab == 'qualifeed' %}active{% endif %}">
+    <span class="pg-icon"><i class="fa-brands fa-qualifeed"></i></span><span class="is-hidden-tablet-only">{% translate "Products" %}</span>
+    </a>
+   
+  </div>
+ 
+</div>
+
+
+
+
+  <div class="sidenav">
+    
+    <button class="dropdown-btn">
+    <span class="pg-icon"><i class="fa fa-tasks"></i></span>    
+Defect Management
+    <i class="fa fa-caret-down"></i>
+     
+    </button>
+  <div class="dropdown-container">
+    <a href="{% url 'qualifeed:defectType' request.team.slug %}" class="nav-link {% if active_tab == 'qualifeed' %}active{% endif %}">
+      <span class="pg-icon"><i class="fa-brands fa-qualifeed"></i></span><span class="is-hidden-tablet-only">{% translate "Defect Criticity" %}</span>
+      </a>
+      <a href="{% url 'qualifeed:defect' request.team.slug %}" class="nav-link {% if active_tab == 'teams_example' %}active{% endif %}">
+        <span class="pg-icon"><i class="fa-brands fa-qualifeed"></i></span><span class="is-hidden-tablet-only">{% translate "Defect Definition" %}</span>
+      </a>
+      <a href="{% url 'qualifeed:checkControl' request.team.slug %}" class="nav-link {% if active_tab == 'qualifeed' %}active{% endif %}">
+        <span class="pg-icon"><i class="fa-brands fa-qualifeed"></i></span><span class="is-hidden-tablet-only">{% translate "Alert Control" %}</span>
+        </a>
+    </div>
+   
+  </div>
+  <div class="sidenav">
+    <button class="dropdown-btn">
+     <span class="pg-icon"><i class="fa fa-user"></i></span>    
+     User Setting 
+     <i class="fa fa-caret-down"></i>
+      </button>
+   <div class="dropdown-container">
+     <a href="{% url 'qualifeed:user' request.team.slug %}" class="nav-link {% if active_tab == 'qualifeed' %}active{% endif %}">
+       <span class="pg-icon"><i class="fa-brands fa-qualifeed"></i></span><span class="is-hidden-tablet-only">{% translate "User setting" %}</span>
+       </a>
+   </div>
+ 
+ </div>
+
+  {% endif %}
+
+  {% if request.user|is_admin_of:request.team %}
+
+  <script>
+    /* Loop through all dropdown buttons to toggle between hiding and showing its dropdown content - This allows the user to have multiple dropdowns without any conflict */
+    var dropdown = document.getElementsByClassName("dropdown-btn");
+    var i;
+    
+    for (i = 0; i < dropdown.length; i++) {
+      dropdown[i].addEventListener("click", function() {
+        this.classList.toggle("active");
+        var dropdownContent = this.nextElementSibling;
+        if (dropdownContent.style.display === "block") {
+          dropdownContent.style.display = "none";
+        } else {
+          dropdownContent.style.display = "block";
+        }
+      });
+    }
+    </script>
+
+
+
+  {% endif %}
+
+  <li class="nav-item">
+    <a href="{% url 'single_team:manage_team' request.team.slug %}" class="nav-link {% if active_tab == 'manage-team' %}active{% endif %}">
+      <span class="pg-icon"><i class="fa fa-gear"></i></span><span class="is-hidden-tablet-only">{% translate "My Team" %}</span>
+    </a>
+  </li>
+{% endif %}

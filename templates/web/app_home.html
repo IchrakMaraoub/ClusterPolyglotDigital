@@ -1,0 +1,532 @@
+
+{% extends "web/app/app_base.html" %}
+{% load i18n %}
+{% load static %}
+{% block app %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bootstrap CRUD Data Table for Database with Modal Form</title>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto|Varela+Round">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script src="https://cdn.datatables.net/1.13.1/js/jquery.dataTables.min.js"></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.1/css/jquery.dataTables.min.css">
+
+<section class="app-card">
+  
+  <div class="pg-columns pg-columns-reversed pg-align-items-center" >
+      <div class="pg-column-one-third">
+        
+          <img class="img-fluid" src="{% static 'images/undraw/analytics.svg' %}"  style="float: right; margin-left: 10px; width: 200px; height: 150px;">
+      </div>
+      
+      <div class="pg-column">
+        <h1 class="pg-title" class="pg-subtitle" style="font-size: 40px; color:orange;">
+          {% translate "Qualifeed Stats" %}
+      </h1>
+    </div>
+  </div>
+</section>
+<style>
+  body {
+    
+    align-items: center;
+    justify-content: center;
+   
+    height: 100vh; 
+    background-color: #f1f1f1;
+  }
+
+input {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+  }
+
+label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+  }
+
+
+</style>
+
+<div class="container-fluid py-4">
+  <div class="row">
+    <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
+      <div class="card">
+        <div class="card-header p-3 pt-2">
+          
+          <div class="icon icon-lg icon-shape bg-gradient-dark shadow-dark text-center border-radius-xl mt-n4 position-absolute">
+            <i class="material-icons opacity-10">apps</i>
+          </div>
+          <div class="text-end pt-1">
+            <p class="text-sm mb-0 text-capitalize">Products</p>
+            <h4 class="mb-0">{{product_count}}</h4>
+          </div>
+        </div>
+        <hr class="dark horizontal my-0">
+        <div class="card-footer p-3">
+          <p class="mb-0"><span class="text-success text-sm font-weight-bolder"> </span></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
+      <div class="card">
+        <div class="card-header p-3 pt-2">
+          <div class="icon icon-lg icon-shape bg-gradient-primary shadow-primary text-center border-radius-xl mt-n4 position-absolute">
+            <i class="material-icons opacity-10">announcement</i>
+          </div>
+          <div class="text-end pt-1">
+            <p class="text-sm mb-0 text-capitalize">Controls</p>
+            <h4 class="mb-0">{{control_count}}</h4>
+          </div>
+        </div>
+        <hr class="dark horizontal my-0">
+        <div class="card-footer p-3">
+          <p class="mb-0"><span class="text-success text-sm font-weight-bolder"></span></p>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
+      <div class="card">
+        <div class="card-header p-3 pt-2">
+          <div class="icon icon-lg icon-shape bg-gradient-success shadow-success text-center border-radius-xl mt-n4 position-absolute">
+            <i class="material-icons opacity-10">description</i>
+          </div>
+          <div class="text-end pt-1">
+            <p class="text-sm mb-0 text-capitalize">Defects</p>
+            <h4 class="mb-0">{{defect_count}}</h4>
+          </div>
+        </div>
+        <hr class="dark horizontal my-0">
+        <div class="card-footer p-3">
+          <p class="mb-0"><span class="text-danger text-sm font-weight-bolder"></span> </p>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-3 col-sm-6">
+      <div class="card">
+        <div class="card-header p-3 pt-2">
+          <div class="icon icon-lg icon-shape bg-gradient-info shadow-info text-center border-radius-xl mt-n4 position-absolute">
+            <i class="material-icons opacity-10">build</i>
+          </div>
+          <div class="text-end pt-1">
+            <p class="text-sm mb-0 text-capitalize">Reperations</p>
+            <h4 class="mb-0">{{reperation_count}}</h4>
+          </div>
+        </div>
+        <hr class="dark horizontal my-0">
+        <div class="card-footer p-3">
+          <p class="mb-0"><span class="text-success text-sm font-weight-bolder"> </span></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+ 
+
+
+<section>
+  <div style="display: flex;">
+    <div class="app-card">
+     
+      <h1 class="pg-title">
+        <i class="fa fa-line-chart" aria-hidden="true"></i>
+        {% translate "the number of defects in controls per Period" %}
+      </h1>
+      <div class="row">
+        <div class="col-md-3 mb-2">
+        <label for="ChoosePeriod">{% translate "Choose Period:" %}</label>
+          <select id="chartDropdown2" class="form-select" style="display: inline-block; margin-left: 20px">
+            <option value="">----</option>
+            <option value="month" id="month">Month</option>
+            <option value="day" id="day">Day</option>
+          </select>
+        </div>
+        <div class="col-md-3 mb-2">
+          <label for="startDate">{% translate "Start Date:" %}</label>
+          <input type="date" id="startDate" class="form-control" style="display: inline-block; margin-left: 20px">
+        </div>
+        <div class="col-md-3 mb-2">
+          <label for="endDate">{% translate "End Date:" %}</label>
+          <input type="date" id="endDate" class="form-control" style="display: inline-block; margin-left: 20px">
+        </div>
+
+        <div style="display: flex;">
+          <div class="col-md-3 mb-2" style="margin-top: 20px">
+            <button id="filterBtn" class="btn btn-primary" style="display: inline-block; margin-left: 20px">{% translate "Filter" %}</button>
+            <button id="resetBtn" class="btn btn-secondary" style="display: inline-block; margin-left: 10px">{% translate "Reset" %}</button>
+          </div>
+
+
+        </div>
+
+      
+    </div>
+    
+   
+      <canvas id="myChartjob"></canvas>
+   
+     
+    </div>
+  </div>
+
+</section>
+
+<script>
+  
+ // initialize chart with empty data
+var ctx6 = document.getElementById('myChartjob').getContext('2d');
+var chart2 = new Chart(ctx6, {
+  type: 'line',
+  data: {
+    labels: [],
+    datasets: [{
+      label: 'Number of Defects',
+      data: [],
+      borderWidth: 1
+    }]
+  },
+  options: {
+    scales: {
+      yAxes: [{
+        ticks: {
+          beginAtZero: true
+        }
+      }]
+    }
+  }
+});
+
+// Filter chart data based on period day or month 
+
+const filterBtn = document.getElementById('filterBtn');
+filterBtn.addEventListener('click', () => {
+  const period = document.getElementById('chartDropdown2').value;
+  const startDate = document.getElementById('startDate').value;
+  const endDate = document.getElementById('endDate').value;
+
+  let chartData;
+  let chartLabel;
+  if (period === 'day') {
+    chartData = JSON.parse('{{ chart_control_data_day|safe }}');
+    chartLabel = 'Defects by Day';
+  } else if (period === 'month') {
+    chartData = JSON.parse('{{ chart_control_data_month|safe }}');
+    chartLabel = 'Defects by Month';
+  } else {
+    chartData = { labels: [], values: [] };
+    chartLabel = '';
+  }
+
+  // Filter chart data based on date range
+  // For period month, filter data based on selected month(s) in range
+
+  if (startDate && endDate) {
+    const startDateObj = new Date(startDate);
+    const endDateObj = new Date(endDate);
+    const filteredLabels = [];
+    const filteredValues = [];
+    chartData.labels.forEach((label, index) => {
+      const labelDate = new Date(label);
+      const labelMonth = labelDate.getMonth();
+      const labelYear = labelDate.getFullYear();
+      const startDateMonth = startDateObj.getMonth();
+      const startDateYear = startDateObj.getFullYear();
+      const endDateMonth = endDateObj.getMonth();
+      const endDateYear = endDateObj.getFullYear();
+      if (
+        (startDateYear < labelYear || (startDateYear === labelYear && startDateMonth <= labelMonth)) && 
+        (endDateYear > labelYear || (endDateYear === labelYear && endDateMonth >= labelMonth))
+      ) {
+        filteredLabels.push(label);
+        filteredValues.push(chartData.values[index]);
+      }
+    });
+    chartData.labels = filteredLabels;
+    chartData.values = filteredValues;
+  }
+
+  // Get the canvas and context elements
+  const canvas = document.getElementById('myChartjob');
+  const ctx = canvas.getContext('2d');
+
+  // Destroy the old chart
+  Chart.getChart(canvas)?.destroy();
+
+  // Create a new chart with the filtered data
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: chartData.labels,
+      datasets: [{
+        label: chartLabel,
+        data: chartData.values,
+        borderWidth: 1
+      }],
+    },
+    options: {
+      scales: {
+        yAxes: [{
+          ticks: {
+            beginAtZero: true
+          }
+        }]
+      }
+    }
+  });
+});
+
+
+// Get the reset button element
+const resetBtn = document.getElementById('resetBtn');
+
+resetBtn.addEventListener('click', () => {
+  document.getElementById('chartDropdown2').selectedIndex = 0;
+  document.getElementById('startDate').value = '';
+  document.getElementById('endDate').value = '';
+  
+  const chartData = { labels: [], values: [] };
+  const chartLabel = '';
+  
+  const canvas = document.getElementById('myChartjob');
+  const ctx = canvas.getContext('2d');
+  
+  
+  Chart.getChart(canvas)?.destroy();
+  
+  
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: chartData.labels,
+      datasets: [{
+        label: chartLabel,
+        data: chartData.values,
+        borderWidth: 1
+      }],
+    },
+    options: {
+      scales: {
+        yAxes: [{
+          ticks: {
+            beginAtZero: true
+          }
+        }]
+      }
+    }
+  });
+});
+
+  
+</script>
+
+
+<section class="app-card">
+  <h1 class="pg-title">
+    <i class="fa fa-line-chart" aria-hidden="true"></i>
+    {% translate "More Statics" %}
+  </h1>   
+  <div class="row">
+    <h3 class="h3">{% translate "Choose Chart:" %}</h3>
+
+  <div class="col-md-3 mb-2">
+
+  <select id="chartDropdown" class="form-select"  style="display: inline-block; margin-left: 20px">
+     <option value="defectsPerProduct">Name of Defect per Product</option>
+     <option value="productsPerCategory">Number of Products per Category</option>
+     <option value="defectsPerUserPerMonth">Defects per user per month</option>
+     <option value="reparationsPerMonth">Number of Reparations per Month</option>
+  </select>
+  </div>
+  <div class="col-md-3 d-flex align-items-end" >
+
+  <button id="chartButton" type="button" class="btn btn-primary">Generate Chart</button>
+  </div>
+</div>
+  <canvas id="myChart"></canvas>
+</section>
+
+<section >
+<div style="display: flex;">
+  <script type="text/javascript">
+    (function(d, m){
+        var kommunicateSettings = 
+            {"appId":"2f714a2c1c0ad786c71982711e10c80a2","popupWidget":true,"automaticChatOpenOnNavigation":true};
+        var s = document.createElement("script"); s.type = "text/javascript"; s.async = true;
+        s.src = "https://widget.kommunicate.io/v2/kommunicate.app";
+        var h = document.getElementsByTagName("head")[0]; h.appendChild(s);
+        window.kommunicate = m; m._globals = kommunicateSettings;
+    })(document, window.kommunicate || {});
+/* NOTE : Use web server to view HTML files as real-time update will not work if you directly open the HTML file in the browser. */
+</script>
+
+
+<script>
+  function showDefaultChart() {
+    const canvas = document.getElementById('myChart');
+
+    // If a chart already exists on the canvas element, destroy it
+    const oldChart = Chart.getChart(canvas);
+    if (oldChart) {
+      oldChart.destroy();
+    }
+    var ctx1 = document.getElementById('myChart');
+    new Chart(ctx1, {
+      type: 'bar',
+      data: {
+        labels: {{labels|safe}},
+        datasets: [{
+          label: 'Name of Defect per Product',
+          data:  {{data_defect}},
+           borderWidth: 1
+         
+        }]
+      },
+      options: {
+  
+      }
+    });
+  };
+
+  showDefaultChart(); // Call the function to show the default chart on page load
+
+  // Add an event listener to the Generate Chart button
+  chartButton.addEventListener("click", function() {
+    const canvas = document.getElementById('myChart');
+
+    // If a chart already exists on the canvas element, destroy it
+     const oldChart = Chart.getChart(canvas);
+     if (oldChart) {
+      oldChart.destroy();
+     }
+
+    // Get the selected chart from the dropdown
+     const chartSelection = document.getElementById('chartDropdown').value;
+
+    // Call the appropriate function to generate the selected chart
+     if (chartSelection === 'defectsPerProduct') {
+      const ctx1 = document.getElementById('myChart');
+      new Chart(ctx1, {
+        type: 'bar',
+        data: {
+          labels: {{labels|safe}},
+          datasets: [{
+            label: 'Name of Defect per Product',
+            data:  {{data_defect}},
+            borderWidth: 1
+          }]
+        },
+        options: {}
+      });
+     } else if (chartSelection === 'productsPerCategory') {
+      const ctx2 = document.getElementById('myChart');
+      new Chart(ctx2, {
+        type: 'bar',
+        data: {
+          labels: [
+            {% for category in category_data %}
+              "{{ category.category_name }}",
+            {% endfor %}
+          ],
+          datasets: [{
+            label: 'Number of Products per Category',
+            data: [
+              {% for category in category_data %}
+                {{ category.num_products }},
+              {% endfor %}
+            ],
+         
+            borderWidth: 1
+            }]
+          },
+          options: {}
+        });
+      }else if(chartSelection === 'defectsPerUserPerMonth'){
+
+        const defectCountsByUser = {{ defect_counts_by_user|safe }};
+        const content = [];
+        const labels = [];
+        for (const user_email in defectCountsByUser) {
+            const count = defectCountsByUser[user_email];
+            labels.push(user_email);
+            content.push(count);
+        }
+        
+          const ctx3 = document.getElementById('myChart').getContext('2d');
+        
+          new Chart(ctx3, {
+              type: 'bar',
+              data: {
+                  labels: labels,
+                  datasets: [{
+                      label: 'Defects per user per month',
+                      data: content,
+                    
+                      borderWidth: 1
+                  }]
+              },
+              options: {
+                scales: {
+                    y: {
+                      beginAtZero: true
+                  }
+                }
+              }
+          });
+
+        }else if(chartSelection === 'reparationsPerMonth'){
+          const ctx4 = document.getElementById('myChart');
+  
+          new Chart(ctx4, {
+          type: 'bar',
+          data: {
+            labels: [
+                {% for month_data in reparations_by_month %}
+                    "{{ month_data.month|date:'F Y' }}",
+                {% endfor %}
+            ],
+            datasets: [{
+                label: 'Number of Reparations per Month',
+                data: [
+                    {% for month_data in reparations_by_month %}
+                        {{ month_data.reparation_count }},
+                    {% endfor %}
+              ],
+      
+              borderWidth: 1
+            }]
+          },
+          options: {
+            scales: {
+              yAxes: [{
+                ticks: {
+                  beginAtZero: true
+                }
+              }]
+            }
+          }
+         });
+       
+      }
+    });
+
+    
+  </script>
+
+</body>
+
+</html>
+
+{% endblock %}

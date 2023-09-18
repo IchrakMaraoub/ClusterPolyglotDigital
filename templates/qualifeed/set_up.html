@@ -1,0 +1,20 @@
+{% extends "web/app/app_base.html" %}
+{% load static %}
+{% block app %}
+<section class="app-card">
+    <h1 class="pg-title"> Setting your product </h1>
+</section>
+<section class="app-card">
+    <form method="POST" hx-post="{% url 'qualifeed:setUp' request.team.slug %}" hx-encoding="multipart/form-data"
+                hx-target="this" hx-swap="outerHTML">
+            {% csrf_token %}
+            
+            {{ product_form.as_p }}
+            {{ categorie_form.as_p }}
+            {{ caracterstic_form.as_p }}
+            <div class="form-group">
+                <input type="submit" class="btn btn-primary btn-block btn-sm" value="save">
+            </div>
+    </form>
+</section>
+{% endblock %}

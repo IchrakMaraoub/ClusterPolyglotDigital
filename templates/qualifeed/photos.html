@@ -1,0 +1,176 @@
+{% extends "web/app/app_base.html" %}
+{% load i18n %}
+{% load static %}
+{% block app %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bootstrap CRUD Data Table for Database with Modal Form</title>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto|Varela+Round">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+
+<script src="https://cdn.datatables.net/1.13.1/js/jquery.dataTables.min.js"></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.1/css/jquery.dataTables.min.css">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js"></script>
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/simplelightbox@2.7.0/dist/simple-lightbox.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/simplelightbox/2.1.0/simple-lightbox.min.js"></script>
+
+
+<section class="app-card">
+  <div class="pg-columns pg-columns-reversed pg-align-items-center">
+      <img class="img-fluid" src="{% static 'images/undraw/report.jpeg' %}" style="float:right; margin-left: 10px; width: 250px; height: 200px;">
+     
+      <div class="pg-column">
+        <h1 class="pg-title pg-subtitle" style="font-size: 40px; color: #ff69b4;">
+            {% translate "Photos" %}
+        </h1>
+    </div>
+    
+  </div>
+</section>
+<section class="app-card">
+    <h1 class="pg-title">
+        <i class="fa fa-list-alt" aria-hidden="true"></i>
+        {% translate "Photo Control Per Product" %}
+      </h1>
+    {% for product in products %}
+    <a href="#" class="product-link" data-product-id="{{ product.id }}">{{ product.product_name }}</a>
+    {% endfor %}
+  </section>
+  
+  <div class="modal fade" id="product-images-modal" tabindex="-1" role="dialog" aria-labelledby="product-images-modal-label" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="product-images-modal-label"></h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div id="product-images" class="row"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <style>
+    #product-images .img-fluid {
+      height: 150px;
+      width: 300px;
+      padding: 10px;
+      object-fit: cover; /* to prevent distortion */
+    }
+    .modal-dialog {
+      max-width: 900px; /* set the maximum width of the modal */
+    }
+    
+    .modal-body {
+      height: 500px; /* set the height of the modal body */
+      overflow-y: auto; /* add a scrollbar when the content overflows */
+    }
+  </style>
+  <script>
+    $(document).ready(function() {
+      $('.product-link').click(function() {
+        var productId = $(this).data('product-id');
+        var modalTitle = $(this).text();
+        var modal = $('#product-images-modal');
+        var modalLabel = $('#product-images-modal-label');
+        var modalBody = $('#product-images');
+        modalLabel.text(modalTitle);
+        modal.modal('show');
+        console.log(productId);
+        $.ajax({
+          url: '{% url 'qualifeed:photo' request.team.slug%}',
+          data: {
+            'product_name_image': productId
+          },
+          success: function(response) {
+            console.log(response);
+            modalBody.empty();
+            if (response.image_urls.length === 0) {
+              modalBody.append('<p>No photos returned in Control for this product.</p>');
+            } else {
+              $.each(response.image_urls, function(index, imageUrl) {
+                modalBody.append('<div class="col-md-3"><a href="' + imageUrl + '" data-toggle="lightbox" data-gallery="product-gallery"><img src="' + imageUrl + '" class="img-fluid"></a></div>');
+              });
+              // Activate the lightbox plugin for the gallery
+            }
+          }
+        });
+      });
+      $('#product-images-modal .close').click(function() {
+        $('#product-images-modal').modal('hide');
+      });
+    });
+  
+  </script>
+  <section class="app-card">
+    <h1 class="pg-title">
+        <i class="fa fa-list-alt" aria-hidden="true"></i>
+        {% translate "Photo Per Defects" %}
+      </h1>
+    {% for defect in defects %}
+    <a href="#" class="defect-link" data-defect-id="{{ defect.id }}">{{ defect.defect_name }}</a>
+    {% endfor %}
+  </section>
+  <div class="modal fade" id="defect-images-modal" tabindex="-1" role="dialog" aria-labelledby="defect-images-modal-label" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="defect-images-modal-label"></h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div id="defect-images" class="row"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    $(document).ready(function() {
+      $('.defect-link').click(function() {
+        var defectId = $(this).data('defect-id');
+        var modalTitle = $(this).text();
+        var modal = $('#defect-images-modal');
+        var modalLabel = $('#defect-images-modal-label');
+        var modalBody = $('#defect-images');
+        modalLabel.text(modalTitle);
+        modal.modal('show');
+        console.log(defectId);
+        $.ajax({
+          url: '{% url 'qualifeed:photo' request.team.slug%}',
+          data: {
+            'defect_name_image': defectId
+          },
+          success: function(response) {
+            console.log(response);
+            modalBody.empty();
+            if (response.image_urls.length === 0) {
+              modalBody.append('<p>No photos added in to this defect.</p>');
+            } else {
+              $.each(response.image_urls, function(index, imageUrl) {
+                modalBody.append('<div class="col-md-3"><a href="' + imageUrl + '" data-toggle="lightbox" data-gallery="defect-gallery"><img src="' + imageUrl + '" class="img-fluid"></a></div>');
+              });
+              // Activate the lightbox plugin for the gallery
+            }
+          }
+        });
+      });
+      $('#defect-images-modal .close').click(function() {
+        $('#defect-images-modal').modal('hide');
+      });
+    });
+  
+  </script>
+{% endblock %}

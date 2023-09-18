@@ -1,0 +1,452 @@
+{% extends "web/app/app_base.html" %}
+{% load static %}
+{% block app %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bootstrap CRUD Data Table for Database with Modal Form</title>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto|Varela+Round">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+
+<script src="https://cdn.datatables.net/1.13.1/js/jquery.dataTables.min.js"></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.1/css/jquery.dataTables.min.css">
+<section class="app-card">
+    <h1 class="pg-title"> Defect Definition </h1>
+</section>
+
+<section class="app-card">
+    <div class="table-wrapper">
+        <div class="row">
+            <div class="mx-3">
+              <div class="table-title"  class="btn btn-primary btn-block btn-sm"  style="float: right; font-size:16px;">
+            
+                    <a  href="#addDefectModal" class="btn btn-primary btn-block btn-sm"  data-bs-toggle="modal" style="font-size : 12px;"><i class="material-icons">&#xE147;</i> <span>Add New Defect</span></a>
+                </div>
+            </div>
+        </div>
+<section style="padding: 10 px;">
+  <div class="table-responsive">  
+    <table width="100%" id="table_search" class="display table table-striped dataTable no-footer" border="0" cellpadding="5" role="grid" style="width: 100%;">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Defect Name</th>
+                <th>Defect Criticity</th>  
+                <th>Defect Criticity Value</th>      
+                <th>Defect pattern</th>      
+                <th>Creation Date</th>  
+                <th>Product Name</th>      
+                <th>Edit</th>
+            </tr>
+        </thead>
+        <tbody>        
+            {% for item in defects %}
+                <tr>
+                    <td>{{ item.id}}</td>
+                    <td>{{ item.defect_name}}</td>
+                    <td>{{ item.defect_type}}</td>
+                    <td>{{ item.defect_type_value}}</td>
+                    <td>{{ item.pattern}}</td>
+                    <td>{{ item.created_at}}</td>
+                    <td>
+
+                        <a href="#product-modal" class="btn btn-primary btn-block btn-sm btn-show-products" data-id="{{ item.id }}" data-bs-toggle="modal"><span>Show Products</span></a>
+
+                    </td>
+                    <td>
+                        <a href="#editDefectModal" class="edit" data-id="{{ item.id }}" data-bs-toggle="modal" style="float: right;"><i class="material-icons" data-bs-toggle="tooltip" title="Edit">&#xE254;</i></a>
+                    </td>
+                </tr> 
+     
+                {% endfor %}
+            </tbody>           
+
+    </table>
+  </div>
+</section>
+<div class="modal fade" id="product-modal" tabindex="-1" aria-labelledby="product-modal-label" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="product-modal-label">Products</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <table id="product-table" class="table table-striped">
+            <thead>
+              <tr>
+                <th>Product Name</th>
+                <th>Product Reference</th>
+
+                <th>Remove Product</th>
+              </tr>
+            </thead>
+            <tbody>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+</div>
+<!-- ADD Modal HTML -->
+<div id="addDefectModal" class="modal fade">
+<div class="modal-dialog">
+    <div class="modal-content">
+        <form id="formAdd" method="POST" hx-post="{% url 'qualifeed:defect' request.team.slug %}" enctype="multipart/form-data"
+                hx-target="this" hx-swap="outerHTML" >                        
+                <div class="modal-header">		
+                    {% csrf_token %}				
+                    <h4 class="modal-title">Add Defect</h4>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-hidden="true" >&times;</button>
+                </div>
+            <div class="modal-body">	
+                <p><label for="id_defect_name">Defect name:</label> {{ defect_form.defect_name }}</p>
+                <p><label for="id_defect_name">Defect pattern:</label> {{ defect_form.pattern }}</p>
+
+                <div class="form-group validate">
+                    <label for="id_defect_type">Defect Criticity</label>
+                    <select name="defect_type" class="form-control">
+                        <option class="after1" value="">----</option>
+
+                        {% for varr in defect_type_ajax %}
+                        <option >{{ varr }}</option>
+                        {% endfor %}
+                    </select>
+                    <small class="text-red text-muted mySpan"></small>
+                </div>
+
+                <div class="form-group validate">
+                    <label for="">Defect Criticity Value</label>
+                    <select name="defect_type_value" class="form-control">
+                        <option class="after1" value="">----</option>
+                    </select>
+                    <small class="text-red text-muted mySpan"></small>
+                </div>
+
+                <p><label for="id_description">Description</label> {{ defect_form.description }}</p>
+                <div class="form-group">
+                    <label for="photos">Photos:</label>
+                    <input type="file" name="photos" id="photos" enctype="multipart/form-data" multiple>
+                </div>
+                <label>Products:</label> 
+                <div class="checkbox-list-container">
+                    <ul class="checkbox-list">
+                <li input type="checkbox"  >{{ defect_form.products }} </li>      
+                    </ul>
+                </div>                   
+                <div class="form-group">
+                        <input type="submit" class="btn btn-primary btn-block btn-sm" value="save">
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+</div>
+<style>
+    .checkbox-list-container {
+        max-height: 200px;
+        overflow: auto;
+
+      }
+      
+      .checkbox-list {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+      }
+      
+      .checkbox-list li {
+        display: inline-block;
+        width: 100%;
+      }
+      .checkbox-list-container2 {
+        max-height: 200px;
+        overflow: auto;
+        margin-left: 30px;
+
+      }
+      
+</style>
+<!-- Edit Modal HTML -->
+<div id="editDefectModal" class="modal fade" >
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="formEdit" method="POST" hx-post="{% url 'qualifeed:defect' request.team.slug %}" hx-encoding="multipart/form-data"
+            hx-target="this" hx-swap="outerHTML" >
+                <div class="modal-header">						
+                    <h4 class="modal-title">Edit Defect</h4>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-hidden="true" style="float: right;">&times;</button>
+                </div>
+                <div class="modal-body">					
+                    <div class="form-group">
+                        <label>Id</label>
+                        <input type="text" class="form-control" id="edit-id" name="id" required readonly>
+                        
+                        <label>Defect name</label>
+                        <input type="text" class="form-control" id="edit-name" name="name" required>
+                        
+                        <div class="form-group validate">
+                            <label for="id_defect_type">Defect Type Label</label>
+                            <select name="defect_type" class="form-control" id="edit-type" >
+                                <option class="after" value="" >----</option>
+        
+                                {% for varr in defect_type_ajax %}
+                                <option >{{ varr }}</option>
+                                {% endfor %}
+                            </select>
+                            <small class="text-red text-muted mySpan"></small>
+                        </div>
+
+                        <div class="form-group validate">
+                            <label for="id_defect_type_value">Defect Type Value</label>
+                            <select name="defect_type_value" class="form-control" id="edit-type-value" >
+                                <option class="after" value="" id="edit-type-value"  >----</option>
+                            </select>
+                            <small class="text-red text-muted mySpan"></small>
+                        </div>
+
+                        <label>Description</label>
+                        <input type="text" class="form-control" id="edit-description" name="description" > 
+                        <div class="form-group">
+                            <label>Products:</label>
+                        
+                            <div id="edit-products" class="checkbox-list-container2"  >
+
+                                <!-- Product checkboxes will be added dynamically here -->
+                            </div>
+                        </div>
+                    </div>					
+                </div>
+                <div class="modal-footer">
+                    <input type="button" class="btn btn-default" data-bs-dismiss="modal" value="Cancel">
+                    <input type="submit"  type="submit" class="btn btn-primary btn-block btn-sm" value="save">
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</section>
+<script>
+    $(document).ready( function () {
+        $('#table_search').DataTable(
+           
+        );
+    } );
+    </script>
+{% block scripts %}
+<script>
+   $("#formAdd select[name='defect_type']").on('change', function(){
+    var $this = $(this);
+    console.log($this.val());
+    if($this.val() !=''){
+        $("#formAdd select[name='defect_type_value']").find('.after1').nextAll().remove();
+        $.ajax({
+            url: '{% url 'qualifeed:defect' request.team.slug %}' ,
+            type: 'GET',
+            data : {
+                'defect_type' : $this.val() ,
+              },
+            success: function(resp){
+                let options = '';
+                resp.data.forEach(defect_type_value => {
+                    options+='<option value='+defect_type_value +'>'+defect_type_value +'</option>';
+                });
+                $("#formAdd select[name='defect_type_value']").find('.after1').after(options);
+            }, 
+            error: function(resp){
+                console.log('Something went wrong');
+            }
+        });
+
+    }else{
+        $("#formAdd select[name='defect_type_value']").find('.after1').nextAll().remove();
+    }
+   });
+
+</script>
+<script>
+        // Attach click event listener to "edit-btn" class
+        $('.edit').on('click', function() {
+          // Get the Defect Name from the data attribute
+          var defectId = $(this).data('id');
+            console.log(defectId);
+          // Make an AJAX request to fetch the employee data
+            $.ajax({
+                url: '{% url 'qualifeed:defect' request.team.slug %}' ,
+                method: 'GET',
+                data : {
+                    'defect_id' : defectId ,
+                },
+                success: function(data) {
+                  // Update the form fields with the defect data
+                  console.log(data.values.defect_name);
+                  console.log(data.values.defect_type);
+                  console.log(data.values.defect_type_value);
+                  console.log(data.values.defect_type_list);
+                  $('#edit-id').val(defectId);
+
+                  $('#edit-name').val(data.values.defect_name);
+                  $('#edit-type').val(data.values.defect_type);              
+                  let options = '';
+                    options+="<option value="+'"'+  data.values.defect_type_value +'"'+'>'+ ""+ data.values.defect_type_value +"</option>";
+
+                    $("#formEdit select[name='defect_type_value']").find('.after').after(options);
+
+                    $('#edit-type-value').val(data.values.defect_type_value);
+                    $('#edit-description').val(data.values.description); 
+                    const productNames = data.values.defect_products.map(product => product.name);
+
+                    // Create the HTML for the product checkboxes
+                    var productsHtml = '';
+                    $.each(data.values.all_products, function(index, product) {
+  
+                        if (productNames.includes(product.name )) {
+                      
+                          console.log(product.name);
+  
+                            productsHtml += '<input type="checkbox" name="products" value="' + product.id + '" checked>' + product.name + '<br>';
+                        } else {
+                            productsHtml += '<input type="checkbox" name="products" value="' + product.id + '">' + product.name + '<br>';
+                        }
+                    });
+                        
+                    // Add the product checkboxes to the edit modal
+                    $('#edit-products').html( productsHtml);               
+                    // Show the form
+                    $('#editDefectModal').modal('show');
+
+                }
+            });
+            const form = document.getElementById('formEdit');
+            form.reset();
+        })
+       
+</script>
+<script>
+  $(document).ready(function() {
+    // Add event listener to "Show Products" button
+    $('body').on('click', '.btn-show-products', function() {
+      var defectId = $(this).data('id');
+      console.log(defectId);
+      // Make AJAX request to retrieve products for this defect
+      $.ajax({
+        url: '{% url 'qualifeed:defect' request.team.slug %}',
+        type: 'GET',
+        data: {
+            'defect_item_product': defectId,
+          },
+        success: function(response) {
+            console.log(response);
+            var products = response.products;
+      
+            var productsHtml = "";
+            if (products.length > 0) {
+              productsHtml += "<table class='table table-striped product-table'>";
+              productsHtml += "<thead><tr><th>Product Name</th><th>Product Reference</th><th>Remove Product</th></tr></thead>";
+              productsHtml += "<tbody>";
+    
+              for (var i = 0; i < products.length; i++) {
+                var product = products[i];
+                console.log(defectId);
+                console.log(product.id);
+                productsHtml += "<tr id='product-" + defectId + "-" + product.id + "'>";
+                productsHtml += "<td>" + product.product_name + "</td>";
+                productsHtml += "<td>" + product.serial_code + "</td>";
+                productsHtml += "<td><button class='btn btn-danger remove-product-btn' data-defect-id='" + defectId + "' data-product-id='" + product.id + "'>Remove</button></td>";
+                productsHtml += "</tr>";
+              }
+    
+              productsHtml += "</tbody></table>";
+            } else {
+              productsHtml += "<p>No products found.</p>";
+            }
+
+            var productsTable = document.getElementById("product-table");
+            productsTable.innerHTML = productsHtml;
+          // Show modal
+          $('#product-modal').modal('show');
+        }
+      });
+    });
+  });
+</script>
+<script>
+    $("#formEdit select[name='defect_type']").on('change', function(){
+     var $this = $(this);
+     console.log($this.val());
+     if($this.val() !=''){
+         $("#formEdit select[name='defect_type_value']").find('.after').nextAll().remove();
+         $.ajax({
+             url: '{% url 'qualifeed:defect' request.team.slug %}' ,
+             type: 'GET',
+             data : {
+                 'defect_type' : $this.val() ,
+               },
+             success: function(resp){
+                 let options = '';
+                 resp.data.forEach(defect_type_value => {
+                     options+='<option value='+defect_type_value +'>'+defect_type_value +'</option>';
+                 });
+                 $("#formEdit select[name='defect_type_value']").find('.after').after(options);
+             }, 
+             error: function(resp){
+                 console.log('Something went wrong');
+             }
+         });
+ 
+     }else{
+         $("#formEdit select[name='defect_type_value']").find('.after').nextAll().remove();
+     }
+    });
+ 
+ </script>
+ <script>
+    function toggleProductTable(event, id) {
+      var button = event.target;
+      var productRow = document.getElementById('product-row-' + id);
+      if (productRow.style.display === 'none') {
+        productRow.style.display = 'table-row';
+        button.innerHTML = 'Hide details';
+      } else {
+        productRow.style.display = 'none';
+        button.innerHTML = 'More details';
+      }
+    }
+    </script>
+    <script>
+        $(document).ready(function() {
+            $('body').on('click', '.remove-product-btn', function() {
+                console.log("test");
+            var defectId = $(this).data('defect-id');
+            var productId = $(this).data('product-id');
+            console.log(defectId);
+            console.log(productId);
+
+            $.ajax({
+              url: '{% url 'qualifeed:defect' request.team.slug %}',
+              type: 'GET',
+              data: {
+                'defect_item': defectId,
+                'product_id': productId
+              },
+              success: function(response) {
+                console.log(response);
+
+                if (response.message === 'removed') {
+                    console.log(response);
+                    // Product was successfully removed
+                    $('#product-' + defectId + '-' + productId).remove();
+                }
+            }
+            
+            });
+          });
+        });
+
+    </script>
+{% endblock scripts %}
+{% endblock %}
