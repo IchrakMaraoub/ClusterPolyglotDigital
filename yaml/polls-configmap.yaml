@@ -4,8 +4,7 @@ metadata:
   name: polls-config
 data:
   DJANGO_ALLOWED_HOSTS: "*"
-  STATIC_ENDPOINT_URL: "http://167.99.141.7"
-#  STATIC_BUCKET_NAME: "your_space_name"
+  STATIC_ENDPOINT_URL: "YOUR SERVER ADDRESS"
   DJANGO_LOGLEVEL: "info"
   DEBUG: "True"
   DATABASE_ENGINE: "django.db.backends.postgresql_psycopg2"
