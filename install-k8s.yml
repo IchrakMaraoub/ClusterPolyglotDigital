@@ -1,5 +1,5 @@
 - hosts: "masters, workers"
-  remote_user: ichrak
+  remote_user: root
   become: yes
   become_method: sudo
   become_user: root
